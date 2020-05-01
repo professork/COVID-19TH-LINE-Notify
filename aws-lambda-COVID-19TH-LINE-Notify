@@ -1,0 +1,38 @@
+from botocore.vendored import requests
+import json
+
+def lambda_handler(event, context):
+    #กำหนดค่า Line Notify
+    url = 'https://notify-api.line.me/api/notify'
+    #Line Notify Token
+    token = 'Token here'
+    headers = {'Content-Type': 'application/x-www-form-urlencoded','Authorization':'Bearer ' +token }
+    
+    #ดึงข้อมูล COVID-19
+    covid19_url = 'https://covid19.th-stat.com/api/open/today'
+    covid19_r = requests.get(covid19_url)
+    covid19_data = json.loads(covid19_r.content)
+    
+    
+    #ข้อมูลล่าสุด ผู้ติดเชื้อ COVID-19
+    msg = (
+        "\n"
+        + "สรปุยอดผู้ติดเชื้อ COVID-19 ประจำวันที่ "+ covid19_data["UpdateDate"]+ "\n"
+        + "ติดเชื้อเพิ่มเติม จำนวน: "+ str(covid19_data["NewConfirmed"])+" คน"+ "\n"
+        + "หายดีเพิ่มเติม จำนวน: "+ str(covid19_data["NewRecovered"])+" คน"+ "\n"
+        + "เข้ารับการรักษาเพิ่มเติม จำนวน: "+ str(covid19_data["NewHospitalized"])+" คน"+"\n"
+        + "เสียชีวิตเพิ่มเติม จำนวน: "+ str(covid19_data["NewDeaths"])+" คน"+ "\n"
+        + "ยอดรวมผู้ติดเชื้อ จำนวน: "+ str(covid19_data["Confirmed"])+" คน"+ "\n"
+        + "รักษาหายแล้ว จำนวน: "+ str(covid19_data["Recovered"])+" คน"+ "\n"
+        + "ยังรักษาตัวอยู่ที่ โรงพยาบาล จำนวน: "+ str(covid19_data["Hospitalized"])+" คน"+ "\n"
+        + "รวมผู้ที่เสียชีวิต จำนวน: "+ str(covid19_data["Deaths"])+" คน"+ "\n"
+    )
+    
+    #ส่งข้อมูลไปยัง Line Notify
+    r = requests.post(url, headers=headers, data= {'message':msg})
+    print(r.text)
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Success')
+    }
